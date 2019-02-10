@@ -1,6 +1,423 @@
 
+
+/*
+	Centralized Dialog handling to make things easier
+*/
+var dialog = {
+	visible:	true,
+	front:	 	"",
+	status:	 	{},
+	payload:	{},
+	open:	function(id, payload) {
+		console.info("Dialog.open", id, payload);
+		dialog.status[id]	= true;
+		dialog.payload[id]	= payload;
+		dialog.front			= id;
+	},
+	close:	function(id) {
+		dialog.status[id]	= false;
+		delete dialog.payload[id];
+		dialog.front	= null;
+	},
+	hide:	function() {
+		dialog.visible	= false;
+		$('.app-dialog').hide();
+	},
+	show:	function() {
+		dialog.visible	= true;
+		$('.app-dialog').show();
+	},
+};
+
+
+
+/*
+	Declare the module
+*/
 angular.module('quant-studio', [])
 
+
+
+/*
+	Plot Editor
+*/
+.directive('plotEditor', ['$compile', '$timeout', function ($compile, $timeout) {
+	var component = function($scope, element, attrs, ctlr, transcludeFn) {
+
+		// Utilities
+		$scope.safeApply = function(fn) {
+			var phase = this.$root.$$phase;
+			if(phase == '$apply' || phase == '$digest') {
+				if(fn && (typeof(fn) === 'function')) {
+					fn();
+				}
+			} else {
+				this.$apply(fn);
+			}
+		};
+		
+		
+		$scope.dialog = dialog;
+		
+		
+		
+		
+		
+		var eventSeries = [];
+		
+		$scope.editor	= {
+			form: [{
+				label:	"Title",
+				name:	"title",
+				type:	"input"
+			}],
+			eventForm: [{
+				label:	"Display On",
+				name:	"eventSerie",
+				type:	"list",
+				list:	eventSeries
+			}],
+			bounds: [{
+				label:	"Width",
+				name:	"width",
+				type:	"text"
+			},{
+				label:	"Height",
+				name:	"height",
+				type:	"text"
+			},{
+				label:	"Top",
+				name:	"top",
+				type:	"text"
+			},{
+				label:	"Left",
+				name:	"left",
+				type:	"text"
+			}],
+			// Charts
+			addChart:	function() {
+				console.log("addChart",$scope.plotEditor);
+				$scope.dialog.open('chart-selector', {
+					plot:	$scope.plotEditor.n,
+					charts:	$scope.plotEditor.plot.charts
+				});
+			},
+			editChart:	function(chart) {
+				console.log("editChart",chart);
+				$scope.dialog.open('edit-chart', {
+					chart:	chart,
+					plots:	$scope.plotEditor.plots
+				});
+			},
+			removeChart:	function(chart) {
+				var c = confirm("Are you sure?");
+				if (!c) {
+					return false;
+				}
+				//console.log("removeChart",chart);
+				window.Arbiter.inform('project.charting.chart.remove', chart);
+				$timeout(function() {
+					$scope.safeApply(function() {
+						//console.log("plotEditor.plot.charts",$scope.plotEditor.plot.charts);
+						$scope.plotEditor.plot.charts	= _.filter($scope.plotEditor.plot.charts, function(item) {
+							return item.id != chart.id;
+						});
+					});
+				});
+				/*$scope.dialog.open('edit-chart', {
+					chart:	chart,
+					plots:	$scope.plotEditor.plots
+				});*/
+			},
+			canRemoveChart:	function(chart) {
+				if ($scope.plotEditor && $scope.plotEditor.plot.charts && $scope.plotEditor.plot.charts.length==1) {
+					return false;
+				}
+				return true;
+			},
+			// Events
+			addEvent:	function() {
+				console.log("addEvent",$scope.plotEditor);
+				if (!$scope.plotEditor.plot.events) {
+					$scope.plotEditor.plot.events = [];
+				}
+				var event	= {
+					id:		sdk.sid(),
+					label:	'BUY',
+					source:	'',
+					marker:	{
+						shape:		'rect',
+						bgColor:	'#1E88E5',
+						textColor:	'#ffffff',
+						strokeColor:'#1E88E5',
+						stokeWidth:	1,
+						fontSize:	10,
+						fontWeight:	600
+					}
+				};
+				$scope.plotEditor.plot.events.push(event);
+				$scope.editor.editEvent(event);
+			},
+			editEvent:	function(event) {
+				console.log("editEvent",event);
+				$scope.dialog.open('edit-event', {
+					event:	event,
+					plots:	$scope.plotEditor.plots
+				});
+			},
+			removeEvent:	function(chart) {
+				var c = confirm("Are you sure?");
+				if (!c) {
+					return false;
+				}
+				//console.log("removeChart",chart);
+				window.Arbiter.inform('project.charting.event.remove', chart);
+				$timeout(function() {
+					$scope.safeApply(function() {
+						//console.log("plotEditor.plot.charts",$scope.plotEditor.plot.charts);
+						$scope.plotEditor.plot.events	= _.filter($scope.plotEditor.plot.events, function(item) {
+							return item.id != chart.id;
+						});
+					});
+				});
+				/*$scope.dialog.open('edit-chart', {
+					chart:	chart,
+					plots:	$scope.plotEditor.plots
+				});*/
+			}
+		};
+		
+		$scope.tabs	= {
+			selected:	false,
+			select:		function(id) {
+				$scope.safeApply(function() {
+					$scope.tabs.selected	= id;
+				});
+			},
+			is:		function(id) {
+				return $scope.tabs.selected	== id;
+			}
+		};
+		$scope.tabs.select('charts');
+		
+		
+		$scope.$watch('plotEditor', function() {
+			if ($scope.plotEditor) {
+				$scope.safeApply(function() {
+					console.log("$scope.plotEditor",$scope.plotEditor);
+					$scope.plotEditor.settings = _.extend({
+						width:	'',
+						height:	'',
+						top:	'',
+						left:	''
+					}, $scope.plotEditor.settings);
+					
+					
+					
+					eventSeries = [];
+					_.each($scope.plotEditor.plot.charts, function(chart) {
+						if (chart.settings) {
+							_.each(chart.settings, function(v,k) {
+								if ((/[a-z0-9]{10}\:/gmi).test(v)) {
+									eventSeries.push({
+										label:	k,
+										value:	v
+									});
+								}
+							});
+						}
+					});
+					console.log("eventSeries",eventSeries);
+					$scope.editor.eventForm	= [{
+						label:	"Display On",
+						name:	"eventSerie",
+						type:	"list",
+						list:	eventSeries
+					}];
+				});
+			}
+		});
+		
+		// Increment/decrement the counter of chart display
+		
+		$scope.$on('$destroy', function() {
+			
+		});
+	}
+	return {
+		link: 			component,
+		replace:		true,
+		transclude:		true,
+		scope:			{
+			plotEditor:	'='
+		},
+		templateUrl:	'/js/app/plot-editor.html'
+	};
+}])
+
+
+
+/*
+	Chart Editor
+*/
+.directive('chartEditor', ['$timeout', function ($timeout) {
+	var component = function($scope, element, attrs, ctlr, transcludeFn) {
+
+		// Utilities
+		$scope.safeApply = function(fn) {
+			var phase = this.$root.$$phase;
+			if(phase == '$apply' || phase == '$digest') {
+				if(fn && (typeof(fn) === 'function')) {
+					fn();
+				}
+			} else {
+				this.$apply(fn);
+			}
+		};
+		
+		
+		$scope.dialog = dialog;
+		
+		$scope.chart	= {
+			init:	function() {
+				$scope.safeApply(function() {
+					if (!$scope.chart || !$scope.chartEditor.chart) {
+						return false;
+					}
+					$scope.chart.defaultForm	= [{
+						label:		'Name',
+						name:		'name',
+						value:		1,
+						type:		'input'
+					}];
+					/*
+					if ($scope.chartEditor.plots) {
+						$scope.chart.defaultForm.push({
+							label:		'Plot',
+							name:		'plot',
+							value:		1,
+							type:		'list',
+							list: _.map($scope.chartEditor.plots, function(item) {
+								return {
+									label:	item.settings?item.settings.title:'',
+									value:	item.n
+								}
+							})
+						});
+					}*/ 
+				});
+				// Force the plot location?
+				/*if ($scope.chart.hasOwnProperty('plot')) {
+					console.log("$scope.chartEditor.chart",$scope.chartEditor.chart);
+					$scope.chartEditor.chart.settings.plot	= chart.plot;
+				}*/
+			}
+		};
+		
+		
+		$scope.$watch('chartEditor', function() {
+			if ($scope.chartEditor && $scope.chartEditor.chart) {
+				//$scope.chartEditor.chart	= $scope.chartEditor.chart;
+				//$scope.chartEditor.plots	= $scope.chartEditor.plots;
+				//console.log("$scope.chartEditor",$scope.chartEditor);
+				$scope.chart.init();
+			}
+		});
+		
+		
+		// Increment/decrement the counter of chart display
+		//$scope.core.counters.$inc('chart-editing', 1);
+		$scope.$on('$destroy', function() {
+			//$scope.core.counters.$inc('chart-editing', -1);
+		});
+	}
+	return {
+		link: 			component,
+		replace:		true,
+		transclude:		true,
+		scope:			{
+			chartEditor:	'='
+		},
+		templateUrl:	'/js/app/chart-editor.html'
+	};
+}])
+
+
+
+/*
+	Easy Advanced Form
+*/
+.directive('appForm', ['$timeout', function ($timeout) {
+	var component = function($scope, element, attrs, ctlr, transcludeFn) {
+
+		// Utilities
+		$scope.safeApply = function(fn) {
+			var phase = this.$root.$$phase;
+			if(phase == '$apply' || phase == '$digest') {
+				if(fn && (typeof(fn) === 'function')) {
+					fn();
+				}
+			} else {
+				this.$apply(fn);
+			}
+		};
+		
+		$scope.dialog = dialog;
+		
+		$scope.form	= {
+			refresh:	function() {
+				
+			},
+			selectData:	function(line, value) {
+				// Create a unique ID
+				$scope.form.dataSelectionRequest	= {
+					field:	line,
+					value:	value,
+					id:		sdk.sid()
+				};
+				
+				//console.log("Select data", $scope.form.dataSelectionRequest);
+				window.Arbiter.inform("form.data.select", $scope.form.dataSelectionRequest);
+			}
+		};
+		
+		window.Arbiter.subscribe('form.data.selected', function(data) {
+			$scope.safeApply(function() {
+				if ($scope.form.dataSelectionRequest && data && data.source && data.source.id==$scope.form.dataSelectionRequest.id) {
+					//console.log("data selected", data);
+					$scope.form.dataSelectionRequest.value	= data.port.box+':'+data.port.id;
+					
+					$scope.values[data.source.field.name] = data.port.box+':'+data.port.id;
+				}
+			});
+		});
+		
+		
+		
+		$scope.$watch('appForm', function() {
+			if ($scope.appForm) {
+				//console.log("$scope.appForm",$scope.appForm);
+				$scope.form.refresh();
+			}
+		});
+	}
+	return {
+		link: 			component,
+		replace:		true,
+		transclude:		true,
+		scope:			{
+			appForm:	'=',
+			values:		'='
+		},
+		templateUrl:	'/js/app/form.html'
+	};
+}])
+
+
+
+/*
+	The main app, handling charting
+*/
 .directive('appCharts', ['$timeout', function ($timeout) {
 	var component = function($scope, element, attrs, ctlr, transcludeFn) {
 		
@@ -20,6 +437,8 @@ angular.module('quant-studio', [])
 		anychart.theme('darkBlue');
 		
 		var boundItv;
+		
+		$scope.dialog = dialog;
 		
 		$scope.tabs	= {
 			tabs:		[],
@@ -45,33 +464,7 @@ angular.module('quant-studio', [])
 		console.log("chart element", element);
 		
 		
-		$scope.dialog = {
-			visible:	true,
-			front:	 	"",
-			status:	 	{},
-			payload:	{},
-			open:	function(id, payload) {
-				$scope.safeApply(function() {
-					console.info("Dialog.open", id, payload);
-					$scope.dialog.status[id]		= true;
-					$scope.dialog.payload[id]	= payload;
-					$scope.dialog.front			= id;
-				});
-			},
-			close:	function(id) {
-				$scope.dialog.status[id]	= false;
-				delete $scope.dialog.payload[id];
-				$scope.dialog.front	= null;
-			},
-			hide:	function() {
-				$scope.dialog.visible	= false;
-				$('.app-dialog').hide();
-			},
-			show:	function() {
-				$scope.dialog.visible	= true;
-				$('.app-dialog').show();
-			},
-		};
+		
 		
 		
 		$scope.chart	= {
@@ -854,7 +1247,6 @@ angular.module('quant-studio', [])
 			},
 			editPlot:	function(plot) {
 				//console.log("editPlot", plot);
-				
 				$scope.dialog.open("edit-plot", {
 					plot:		plot,
 					plots:		$scope.app.charting.plots
@@ -1114,9 +1506,9 @@ angular.module('quant-studio', [])
 				//console.log("$scope.app.charting",$scope.app.charting);
 				//console.log("plot",plot);
 				
-				$scope.safeApply(function() {
-					$scope.app.charting.plots.push(plot);
-				});
+				//$scope.safeApply(function() {
+				$scope.app.charting.plots.push(plot);
+				//});
 				return plot;
 			},
 			addChart:	function(options) {
@@ -1144,7 +1536,9 @@ angular.module('quant-studio', [])
 			},
 			addFromDrop:	function(options) {
 				console.log("addFromDrop()",options, $scope.charts);
-				$scope.dialog.open('drag-chart', options);
+				$scope.safeApply(function() {
+					$scope.dialog.open('drag-chart', options);
+				});
 				return false;
 			},
 			// Add an event from a drag & drop
@@ -1155,50 +1549,47 @@ angular.module('quant-studio', [])
 				
 				$scope.dialog.close('drag-chart');
 				
+				//console.log("-------------");
+				var plot;
+				if (parseInt(options.plot)==-1) {
+					//console.log("Creating a new plot");
+					plot	= $scope.chart.addPlot();
+					//console.log("plot",plot);
+					//return false;
+				} else {
+					//console.log("Adding to an existing plot", options.plot, $scope.app.charting.plots);
+					plot = _.find($scope.app.charting.plots, function(item) {
+						return item.id==options.plot;
+					});
+				}
 				
-				window.Arbiter.inform('project.refreshData', function() {
-					//console.log("-------------");
-					var plot;
-					if (parseInt(options.plot)==-1) {
-						//console.log("Creating a new plot");
-						plot	= $scope.chart.addPlot();
-						//console.log("plot",plot);
-						//return false;
-					} else {
-						//console.log("Adding to an existing plot", options.plot, $scope.app.charting.plots);
-						plot = _.find($scope.app.charting.plots, function(item) {
-							return item.id==options.plot;
-						});
+				//console.log("plot", plot);
+				
+				
+				if (plot) {
+					
+					if (!plot.events) {
+						plot.events = [];
 					}
-					
-					//console.log("plot", plot);
-					
-					
-					if (plot) {
-						
-						if (!plot.events) {
-							plot.events = [];
+					var event	= {
+						id:		sdk.sid(),
+						label:	options.data.data.label,
+						source:	options.data.data.box+':'+options.data.data.id,
+						marker:	{
+							shape:		'rect',
+							bgColor:	options.data.data.color,
+							textColor:	'#ffffff',
+							strokeColor:options.data.data.color,
+							stokeWidth:	1,
+							fontSize:	10,
+							fontWeight:	600
 						}
-						var event	= {
-							id:		ftl.sid(),
-							label:	options.data.data.label,
-							source:	options.data.data.box+':'+options.data.data.id,
-							marker:	{
-								shape:		'rect',
-								bgColor:	options.data.data.color,
-								textColor:	'#ffffff',
-								strokeColor:options.data.data.color,
-								stokeWidth:	1,
-								fontSize:	10,
-								fontWeight:	600
-							}
-						};
-						plot.events.push(event);
-						
-						//console.log("plot 2", plot);
-						//console.log("$scope.app 2", $scope.app);
-					}
-				});
+					};
+					plot.events.push(event);
+					
+					//console.log("plot 2", plot);
+					//console.log("$scope.app 2", $scope.app);
+				}
 				
 				
 				
@@ -1292,6 +1683,18 @@ angular.module('quant-studio', [])
 			}
 		}
 		
+		
+		// Szve the app data whenever it changes
+		$scope.$watch('app', function() {
+			if ($scope.app) {
+				sdk.send('save:app', $scope.app);
+			}
+		}, true);
+		
+		
+		window.Arbiter.subscribe('color.changed', function() {
+			$scope.chart.refresh();
+		});
 	
 		$scope.resize = function() {
 			var sidebarHeight = parseInt($(element).innerHeight());
@@ -1384,4 +1787,4 @@ angular.module('quant-studio', [])
 }])
 
 
-angular.module('app', ['quant-studio']).controller('main', function($scope, $locale) {});
+angular.module('app', ['quant-studio','ui.bootstrap.materialPicker','uic']).controller('main', function($scope, $locale) {});

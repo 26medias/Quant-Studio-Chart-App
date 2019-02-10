@@ -70,4 +70,31 @@
 			</div>
 		</div>
 	</div>
+	
+	
+	<!-- Plot Settings Editor -->
+	<div class="app-dialog" ng-if="dialog.status['edit-plot']" ng-class="{front:dialog.front=='edit-plot'}">
+		<div class="bg"></div>
+		<div class="overlay form">
+			<div>
+				<div class="dialog-close" ng-click="dialog.close('edit-plot')">
+					Close <span class="fas fa-times"></span>
+				</div>
+				<div plot-editor="dialog.payload['edit-plot']"></div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Chart Settings Editor -->
+	<div class="app-dialog" ng-if="dialog.status['edit-chart']" ng-class="{front:dialog.front=='edit-chart'}">
+		<div class="bg"></div>
+		<div class="overlay form">
+			<div>
+				<div class="dialog-close" ng-click="dialog.close('edit-chart')">
+					Close <span class="fas fa-times"></span>
+				</div>
+				<div chart-editor="dialog.payload['edit-chart']"></div>
+			</div>
+		</div>
+	</div>
 </div>
