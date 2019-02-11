@@ -461,11 +461,6 @@ angular.module('quant-studio', [])
 			}
 		};
 		
-		console.log("chart element", element);
-		
-		
-		
-		
 		
 		$scope.chart	= {
 			dragChartTypes:	[{
@@ -1236,14 +1231,14 @@ angular.module('quant-studio', [])
 				}
 				];
 				
-				$scope.safeApply(function() {
+				//$scope.safeApply(function() {
 					$scope.charts = _.map(chartModels, function(item) {
 						return item.data;
 					});
 					$scope.charts = _.indexBy($scope.charts, function(item) {
 						return item.id;
 					});
-				});
+				//});
 			},
 			editPlot:	function(plot) {
 				//console.log("editPlot", plot);
@@ -1277,10 +1272,17 @@ angular.module('quant-studio', [])
 				clearInterval(boundItv);
 				
 				
-				if (!$scope.app.charting) {
-					$scope.app.charting = {
-						plots: []
-					}
+				if (!$scope.app.charting || ($scope.app.charting.plots&&$scope.app.charting.plots.length==0)) {
+					$scope.safeApply(function() {
+						$scope.app.charting = {
+							plots: []
+						}
+						console.log("$scope.project.charting",$scope.project.charting);
+						// Import from the old charts?
+						if ($scope.project.charting && $scope.project.charting.plots && _.isArray($scope.project.charting.plots)) {
+							$scope.app.charting.plots	= $scope.project.charting.plots;
+						}
+					});
 				}
 				
 				var plotRefs	= {};
