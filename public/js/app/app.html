@@ -1,34 +1,51 @@
 <div>
 	
-	<!--<div class="chart-tabs">
-		<div class="tab" ng-repeat="tab in tabs.tabs" ng-click="tabs.select(tab)" ng-class="{selected:tabs.is(tab.id)}">
-			<span class="fas fa-chart-area"></span>
-			{{tab.label}}
-		</div>
-		<div class="tab" ng-click="tabs.create()">
-			<span class="fas fa-plus"></span>
-		</div>
-	</div>-->
 	
 	<div class="app-charts">
+		<div class="chart-tabs">
+			<div class="tab hover-menu">
+				<div class="icon" ng-click="box.defaultBox.settingsBox()">
+					<span class="fas fa-bars"></span>
+				</div>
+				<div class="hover-menu-container">
+					<div>
+						<div class="arrow"></div>
+						<div class="menu">
+							<div ng-click="box.defaultBox.aboutBox()">
+								<span class="fas fa-sync"></span> About
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="tab" ng-repeat="tab in app.tabs.tabs" ng-click="tabs.select(tab)" ng-class="{selected:tabs.is(tab.id)}">
+				<span class="fas fa-chart-area"></span>
+				<span ng-if="!tab.editMode" ng-dblclick="tab.editMode=true">{{tab.label}}</span>
+				<input ng-if="tab.editMode" type="text" ng-model="tab.label" ng-enter="tabs.edit(tab, false)" placeholder="Tab name" />
+			</div>
+			<div class="tab" ng-click="tabs.create()">
+				<span class="fas fa-plus"></span>
+			</div>
+		</div>
+		
 		<div id="container" style="height:100%;"></div>
 		
 		<div class="chart-controls">
-			<div class="control" ng-repeat="plot in app.charting.plots" style="top:{{plot.bounds.top+20}}px;" ng-if="plot.bounds">
+			<div class="control" ng-repeat="plot in app.charts[app.tabs.selected.id].plots" style="top:{{plot.bounds.top+20+tabs.height}}px;" ng-if="plot.bounds">
 				<div circle-menu="chart.menu" data="plot"></div>
 			</div>
 		</div>
 		
-		<div class="chart-drop" ng-if="app.charting.plots.length>0">
-			<div class="drop" ng-repeat="plot in app.charting.plots" plot="{{plot.id}}" style="top:{{plot.bounds.top}}px;height:{{plot.bounds.height-5}}px;" ng-if="plot.bounds"></div>
+		<div class="chart-drop" ng-if="app.charts[app.tabs.selected.id].plots.length>0">
+			<div class="drop" ng-repeat="plot in app.charts[app.tabs.selected.id].plots" plot="{{plot.id}}" style="top:{{plot.bounds.top+tabs.height}}px;height:{{plot.bounds.height-5}}px;" ng-if="plot.bounds"></div>
 			
-			<div class="drop add" plot="-1" style="top:{{app.charting.plots[app.charting.plots.length-1].bounds.top+app.charting.plots[app.charting.plots.length-1].bounds.height}}px;height:50px;" ng-if="app.charting.plots[app.charting.plots.length-1]">
+			<div class="drop add" plot="-1" style="top:{{tabs.height+app.charts[app.tabs.selected.id].plots[app.charts[app.tabs.selected.id].plots.length-1].bounds.top+app.charts[app.tabs.selected.id].plots[app.charts[app.tabs.selected.id].plots.length-1].bounds.height}}px;height:50px;" ng-if="app.charts[app.tabs.selected.id].plots[app.charts[app.tabs.selected.id].plots.length-1]">
 				<span>
 					<span class="fas fa-plus"></span>
 				</span>
 			</div>
 		</div>
-		<div class="chart-drop" ng-if="!app.charting.plots || app.charting.plots.length==0">
+		<div class="chart-drop" ng-if="!app.charts[app.tabs.selected.id].plots || app.charts[app.tabs.selected.id].plots.length==0">
 			<div class="drop add" plot="-1" style="top:0;height:100%;">
 				<span>
 					<span class="fas fa-plus"></span>

@@ -147,7 +147,7 @@
 			window.parent.postMessage({
 				type:		type,
 				payload:	sdk.cleanData(payload)
-			}, 'http://localhost:274');
+			}, 'http://localhost:274'); //https://www.quant-studio.com
 		}
 	}
 	

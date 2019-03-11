@@ -612,3 +612,116 @@ label > input {
   top: 0;
   width: 400px;
 }
+
+
+
+.chart-tabs {
+  background-color: #2d2f3b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px;
+  border-bottom: 1px solid #20222e;
+  text-align: left;
+}
+.chart-tabs input {
+	border:	0;
+	background-color: transparent;
+	display: inline-block;
+	font-size: 12px;
+	color: #ffffff;
+	width: 120px;
+}
+.chart-tabs > div {
+  display: inline-block;
+  padding: 5px 15px;
+  margin: 4px 0;
+  text-align: center;
+  color: #b3b3b3;
+  border-bottom: 2px solid transparent;
+  /*transition:		border-bottom 0.2s linear, color 0.3s linear;*/
+
+}
+.chart-tabs > div.selected {
+  border-bottom: 2px solid #508ed7;
+  color: #ffffff;
+}
+.chart-tabs > div:hover {
+  color: #ffffff;
+}
+.chart-tabs > div .tag {
+  font-size: 8px;
+}
+
+
+
+.hover-menu {
+  position: relative;
+}
+.hover-menu .hover-menu-container {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transform: scale(0.5, 0);
+  opacity: 0;
+  z-index: 50000;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+  text-shadow: none;
+}
+.hover-menu .hover-menu-container > div,
+.hover-menu .hover-menu-container > span {
+  position: relative;
+}
+.hover-menu .hover-menu-container > div > .arrow,
+.hover-menu .hover-menu-container > span > .arrow {
+  position: absolute;
+  top: -5px;
+  left: -6px;
+  z-index: 50000;
+  transform: rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background-color: #ffffff;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
+}
+.hover-menu .hover-menu-container > div > .menu,
+.hover-menu .hover-menu-container > span > .menu {
+  position: absolute;
+  top: 0;
+  left: -13px;
+  z-index: 50000;
+  border-radius: 3px;
+  background-color: #ffffff;
+  padding-top: 4px;
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.5);
+}
+.hover-menu .hover-menu-container > div > .menu > div,
+.hover-menu .hover-menu-container > span > .menu > div {
+  white-space: nowrap;
+  color: #333333;
+  font-size: 11px;
+  font-weight: 400;
+  padding: 4px;
+  text-align: left;
+  /*&:first-child {
+						border-radius:	3px 3px 0 0;
+					}*/
+
+}
+.hover-menu .hover-menu-container > div > .menu > div.selected,
+.hover-menu .hover-menu-container > span > .menu > div.selected {
+  background-color: rgba(30, 133, 224, 0.3);
+}
+.hover-menu .hover-menu-container > div > .menu > div:hover,
+.hover-menu .hover-menu-container > span > .menu > div:hover {
+  background-color: rgba(30, 133, 224, 0.2);
+}
+.hover-menu .hover-menu-container > div > .menu > div:last-child,
+.hover-menu .hover-menu-container > span > .menu > div:last-child {
+  border-radius: 0 0 3px 3px;
+}
+.hover-menu:hover .hover-menu-container {
+  transform: scale(1, 1);
+  opacity: 1;
+}
