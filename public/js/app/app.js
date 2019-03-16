@@ -9,7 +9,7 @@ var dialog = {
 	status:	 	{},
 	payload:	{},
 	open:	function(id, payload) {
-		console.info("Dialog.open", id, payload);
+		//console.info("Dialog.open", id, payload);
 		dialog.status[id]	= true;
 		dialog.payload[id]	= payload;
 		dialog.front			= id;
@@ -96,14 +96,14 @@ angular.module('quant-studio', [])
 			}],
 			// Charts
 			addChart:	function() {
-				console.log("addChart",$scope.plotEditor);
+				//console.log("addChart",$scope.plotEditor);
 				$scope.dialog.open('chart-selector', {
 					plot:	$scope.plotEditor.n,
 					charts:	$scope.plotEditor.plot.charts
 				});
 			},
 			editChart:	function(chart) {
-				console.log("editChart",chart);
+				//console.log("editChart",chart);
 				$scope.dialog.open('edit-chart', {
 					chart:	chart,
 					plots:	$scope.plotEditor.plots
@@ -122,6 +122,8 @@ angular.module('quant-studio', [])
 						$scope.plotEditor.plot.charts	= _.filter($scope.plotEditor.plot.charts, function(item) {
 							return item.id != chart.id;
 						});
+						
+						$scope.chart.refresh($scope.app.tabs.selected.id);
 					});
 				});
 				/*$scope.dialog.open('edit-chart', {
@@ -137,7 +139,7 @@ angular.module('quant-studio', [])
 			},
 			// Events
 			addEvent:	function() {
-				console.log("addEvent",$scope.plotEditor);
+				//console.log("addEvent",$scope.plotEditor);
 				if (!$scope.plotEditor.plot.events) {
 					$scope.plotEditor.plot.events = [];
 				}
@@ -159,7 +161,7 @@ angular.module('quant-studio', [])
 				$scope.editor.editEvent(event);
 			},
 			editEvent:	function(event) {
-				console.log("editEvent",event);
+				//console.log("editEvent",event);
 				$scope.dialog.open('edit-event', {
 					event:	event,
 					plots:	$scope.plotEditor.plots
@@ -171,13 +173,16 @@ angular.module('quant-studio', [])
 					return false;
 				}
 				//console.log("removeChart",chart);
-				window.Arbiter.inform('project.charting.event.remove', chart);
+				
 				$timeout(function() {
 					$scope.safeApply(function() {
 						//console.log("plotEditor.plot.charts",$scope.plotEditor.plot.charts);
 						$scope.plotEditor.plot.events	= _.filter($scope.plotEditor.plot.events, function(item) {
 							return item.id != chart.id;
 						});
+						
+						window.Arbiter.inform('project.charting.event.remove', chart);
+						//$scope.chart.refresh($scope.app.tabs.selected.id);
 					});
 				});
 				/*$scope.dialog.open('edit-chart', {
@@ -211,7 +216,7 @@ angular.module('quant-studio', [])
 		$scope.$watch('plotEditor', function() {
 			if ($scope.plotEditor) {
 				$scope.safeApply(function() {
-					console.log("$scope.plotEditor",$scope.plotEditor);
+					//console.log("$scope.plotEditor",$scope.plotEditor);
 					$scope.plotEditor.settings = _.extend({
 						width:	'',
 						height:	'',
@@ -234,7 +239,7 @@ angular.module('quant-studio', [])
 							});
 						}
 					});
-					console.log("eventSeries",eventSeries);
+					//console.log("eventSeries",eventSeries);
 					$scope.editor.eventForm	= [{
 						label:	"Display On",
 						name:	"eventSerie",
@@ -560,7 +565,8 @@ angular.module('quant-studio', [])
 							plots: []
 						}
 					}
-					$scope.app.charts['main'] = $scope.app.charting;	// Copy from V1
+					$scope.app.charts['main'] = _.extend({}, $scope.app.charting);	// Copy from V1
+					delete $scope.app.charting;	// Delete the original chart
 					// Save
 					sdk.send('save:app', $scope.app);
 				} else if (!$scope.app.charts && $scope.project.charting) {
@@ -569,7 +575,8 @@ angular.module('quant-studio', [])
 							plots: []
 						}
 					}
-					$scope.app.charts['main'] = $scope.project.charting;	// Copy from in-project
+					$scope.app.charts['main'] = _.extend({}, $scope.project.charting);	// Copy from in-project
+					delete $scope.project.charting;
 					// Save
 					sdk.send('save:app', $scope.app);
 				}
@@ -1318,7 +1325,7 @@ angular.module('quant-studio', [])
 			refresh:	function(tabId) {
 				
 				
-				console.log("Chart: refresh", tabId);
+				//console.log("Chart: refresh", tabId);
 				
 				if (!tabId || !$scope.app || !$scope.datasets || _.keys($scope.datasets).length==0) {
 					return false;
@@ -1519,8 +1526,9 @@ angular.module('quant-studio', [])
 				
 				
 				// Restore the scroller zoom
-				if ($scope.app.charts[tabId].scrollerRange) {
-					chartInstance.selectRange($scope.app.charts[tabId].scrollerRange.from,$scope.app.charts[tabId].scrollerRange.to);
+				if ($scope.app.charts[tabId].scrollerRange && sdk.data.user_id /*Custom range only for logged in users*/) {
+					//@TODO: range for everybody, but check that the range is valid
+					chartInstance.selectRange($scope.app.charts[tabId].scrollerRange.from, $scope.app.charts[tabId].scrollerRange.to);
 				}
 				
 				// Save the scroller zoom when it changes
@@ -1600,7 +1608,7 @@ angular.module('quant-studio', [])
 				return moment(date).format("YYYY-MM-DD HH:mm");
 			},
 			addFromDrop:	function(options) {
-				console.log("addFromDrop()",options, $scope.charts);
+				//console.log("addFromDrop()",options, $scope.charts);
 				$scope.safeApply(function() {
 					$scope.dialog.open('drag-chart', options);
 				});
@@ -1609,7 +1617,7 @@ angular.module('quant-studio', [])
 			// Add an event from a drag & drop
 			addDragEvents:	function(type, options) {
 				
-				console.log("addDragEvents", type, options);
+				//console.log("addDragEvents", type, options);
 				//console.log("$scope.charts",$scope.charts);
 				
 				$scope.dialog.close('drag-chart');
@@ -1627,7 +1635,7 @@ angular.module('quant-studio', [])
 					});
 				}
 				
-				console.log("plot", plot);
+				//console.log("plot", plot);
 				
 				
 				if (plot) {
@@ -1651,6 +1659,7 @@ angular.module('quant-studio', [])
 					};
 					plot.events.push(event);
 					
+					$scope.chart.refresh($scope.app.tabs.selected.id);
 					//console.log("plot 2", plot);
 					//console.log("$scope.app 2", $scope.app);
 				}
@@ -1661,7 +1670,7 @@ angular.module('quant-studio', [])
 			// Add a chart from a drag & drop
 			addDragChart:	function(type, options) {
 				
-				console.log("addDragChart", type, options);
+				//console.log("addDragChart", type, options);
 				
 				$scope.dialog.close('drag-chart');
 				
@@ -1770,15 +1779,39 @@ angular.module('quant-studio', [])
 				if (!$scope.app || !$scope.app.tabs) {
 					return false;
 				}
+				
+				// Create the tab
 				var tab = {
 					id:		'_' + Math.random().toString(36).substr(2, 9),
 					label:	label?label:'Panel #'+($scope.app.tabs.tabs.length+1)
 				};
 				$scope.app.tabs.tabs.push(tab);
+				
+				// Create the chart
+				$scope.app.charts[tab.id] = {
+					plots: []
+				}
+				
+				// Select the tab
 				$scope.tabs.select(tab);
 			},
 			edit:		function(tab, status) {
 				tab.editMode	 = status;
+			},
+			remove:		function(tab) {
+				var c = confirm("Are you sure?");
+				if (!c) {
+					return false;
+				}
+				// Remove the tab
+				$scope.app.tabs.tabs = _.filter($scope.app.tabs.tabs, function(item) {
+					return item.id != tab.id;
+				});
+				// Remove the data
+				delete $scope.app.charts[tab.id];
+				$timeout(function() {
+					$scope.safeApply(function() {});
+				});
 			}
 		};
 		

@@ -21,6 +21,7 @@
 			<div class="tab" ng-repeat="tab in app.tabs.tabs" ng-click="tabs.select(tab)" ng-class="{selected:tabs.is(tab.id)}">
 				<span class="fas fa-chart-area"></span>
 				<span ng-if="!tab.editMode" ng-dblclick="tab.editMode=true">{{tab.label}}</span>
+				<span ng-if="!tab.editMode" class="del" ng-click="tabs.remove(tab)"><span class="fas fa-times"></span></span>
 				<input ng-if="tab.editMode" type="text" ng-model="tab.label" ng-enter="tabs.edit(tab, false)" placeholder="Tab name" />
 			</div>
 			<div class="tab" ng-click="tabs.create()">

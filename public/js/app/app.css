@@ -624,6 +624,17 @@ label > input {
   border-bottom: 1px solid #20222e;
   text-align: left;
 }
+.chart-tabs .del {
+	padding:		2px 4px;
+	font-size:		9px;
+	font-weight:	700;
+	border:			1px solid rgba(255,255,255,0.05);
+	color:			rgba(255,255,255,0.3);
+	display:		inline-block;
+	&:hover {
+		color:		rgba(255,255,255,0.8);
+	}
+}
 .chart-tabs input {
 	border:	0;
 	background-color: transparent;

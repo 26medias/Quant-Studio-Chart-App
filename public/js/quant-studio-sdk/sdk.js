@@ -118,6 +118,8 @@
 			var evtDomain	= typeParts[0];
 			var evtType		= typeParts[1];
 			
+			//console.log(">> ", evtDomain, evtType);
+			
 			switch (evtDomain) {
 				case "data":
 					sdk.data[evtType] = dataPayload;
@@ -143,11 +145,19 @@
 			//console.log("Client received:", payload);
 		},
 		send:	function(type, payload) {
+			var parts = type.split(':');
+			switch (parts[0]) {
+				case "save":
+				if (!sdk.data.user_id) {
+					console.log("Save not allowed, user not authenticated");
+				}
+				break;
+			}
 			//console.log("Client Send:", type, payload);
 			window.parent.postMessage({
 				type:		type,
 				payload:	sdk.cleanData(payload)
-			}, 'http://localhost:274'); //https://www.quant-studio.com
+			}, /*'http://localhost:274'*/'https://www.quant-studio.com'); //http://localhost:274
 		}
 	}
 	
